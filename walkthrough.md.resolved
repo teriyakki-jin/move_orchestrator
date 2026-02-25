@@ -1,0 +1,44 @@
+# 🚀 이사 AI 스마트 민원 도우미 - 프론트엔드 완결 보고서
+
+요청하신 ChatGPT 스타일의 프론트엔드 채팅 UI 구현을 성공적으로 완료했습니다. 백엔드에서 제공되는 복잡한 민원 정보(우선순위 Task, 서비스 링크 등)를 사용자가 직관적으로 이해하고 클릭할 수 있도록 세련된 인터페이스로 구성했습니다.
+
+요청하신 대로, 복잡한 LLM 검증 과정을 생략하고 바로 결과를 확인할 수 있도록 **목데이터(Mock Data) 기반**으로 설정해 두었습니다. 즉, 질문을 클릭하거나 엔터를 치면 곧바로 결과가 렌더링 됩니다.
+
+---
+
+## 📸 최종 구현 화면 (Mock Data)
+
+````carousel
+![서비스 초기화면 및 추천 질문](/C:/Users/USER/.gemini/antigravity/brain/2a868cae-d434-4081-a9dd-33e04098ed63/frontend_chat_ui_verified_1771986061109.png)
+<!-- slide -->
+![풍부한 목데이터(해야할일, 카드, 다음질문)가 렌더링된 모습](/C:/Users/USER/.gemini/antigravity/brain/2a868cae-d434-4081-a9dd-33e04098ed63/chat_response_test_1771994029785.png)
+````
+
+---
+
+## 🛠 주요 시각적 구성 요소
+
+1. **해야 할 일 체크리스트 (Task Graph)**
+   - 백엔드의 [TaskNode](file:///D:/develop/mvp_move_orchestrator/frontend/src/types/api.ts#33-42) 데이터를 바탕으로 **안전하고 시각적인 체크리스트**를 구현했습니다.
+   - P0(빨강/중요), P1(노랑/보통), P2(초록/선택) 우선순위에 따라 색상을 다르게 렌더링하여 가독성을 높였습니다.
+
+2. **추천 서비스 목록 (Service Cards)**
+   - 백엔드의 [ServiceCard](file:///D:/develop/mvp_move_orchestrator/frontend/src/types/api.ts#20-32) 데이터를 기반으로 행정 서비스 정보를 보여주는 카드 UI를 구성했습니다.
+   - 정부24, 우체국 주거이전 등의 서비스를 바로 신청할 수 있도록 외부 링크(`main_url`) 액션 버튼과, 추천 사유, 근거 법령 등을 깔끔하게 배치했습니다.
+
+3. **마크다운 메시지 & 입력창**
+   - 백엔드가 내려주는 LLM의 Markdown 응답은 `react-markdown` 라이브러리를 통해 깔끔한 폰트와 간격으로 렌더링됩니다.
+   - 사용자가 무엇을 해야 할지 추천해주는 **"이렇게 질문해 보시는 건 어떨까요?"** 질문 버튼 기능도 포함되었습니다.
+
+---
+
+## 💡 구현 내용 요약
+
+- **프레임워크**: Next.js 14 App Router
+- **스타일링**: Tailwind CSS 4 (`@import "tailwindcss"` 기반 최신 사양 적용) + Custom UI 구성
+- **아이콘**: `lucide-react`를 통해 심플하고 세련된 아이콘 적용
+- **데이터소스**: 현재 [src/lib/api.ts](file:///D:/develop/mvp_move_orchestrator/frontend/src/lib/api.ts) 파일에서 네트워크 연동 대신 백엔드 명세와 동일한 Mock(가짜) 데이터를 0.8초 딜레이와 함께 바로 내려주도록 세팅되어 있습니다.
+
+백엔드를 실제로 연결하시려면 [src/lib/api.ts](file:///D:/develop/mvp_move_orchestrator/frontend/src/lib/api.ts) 내부의 Mock 데이터를 지우고 주석 처리된 `apiClient.post("/api/v1/chat")` 부분을 활성화하기만 하면 됩니다.
+
+모든 확인이 완료되었습니다! 수고하셨습니다 🎉
