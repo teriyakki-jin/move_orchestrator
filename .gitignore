@@ -28,6 +28,7 @@ frontend/out/
 *.md
 !README.md
 !frontend/README.md
+!screenshots/UI_report.md
 *.txt
 !requirements.txt
 *.docx
