@@ -33,3 +33,4 @@ class ChatResponse(BaseModel):
     audit_events: list[AuditEvent] = []
     hitl_required: bool = False
     draft_id: str | None = None  # hitl_required=True일 때 submit 엔드포인트용
+    draft_preview: dict | None = None  # 초안 필드 미리보기 (민감 필드 마스킹됨)

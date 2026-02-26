@@ -192,6 +192,7 @@ class Orchestrator:
             audit_events=audit_events,
             hitl_required=hitl_required,
             draft_id=draft_result.get("draft_id") if draft_result else None,
+            draft_preview=draft_result.get("preview") if draft_result else None,
         )
 
     def _update_profile_from_message(self, session: SessionData, message: str) -> SessionData:
