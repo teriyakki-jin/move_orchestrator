@@ -32,3 +32,9 @@ frontend/out/
 *.txt
 !requirements.txt
 *.docx
+
+# Playwright UI Test
+capture.mjs
+node_modules/
+package.json
+package-lock.json
