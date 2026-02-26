@@ -9,6 +9,7 @@ router = APIRouter()
 class SubmitRequest(BaseModel):
     session_id: str
     confirmed: bool
+    sensitive_fields: dict | None = None  # 사용자가 배너에서 직접 입력한 민감 필드
 
 
 @router.post("/submit/{draft_id}")
@@ -34,6 +35,8 @@ def submit_draft(draft_id: str, request: SubmitRequest) -> dict:
     draft["status"] = "submitted"
     draft["session_id"] = request.session_id
     draft["submitted_at"] = datetime.now(timezone.utc).isoformat()
+    if request.sensitive_fields:
+        draft["preview"].update(request.sensitive_fields)
 
     return {
         "draft_id": draft_id,
