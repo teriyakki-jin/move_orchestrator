@@ -65,3 +65,24 @@ FORM_FILL = {
     ],
     "warnings": ["제출 전 반드시 내용을 확인하세요.", "민감정보는 안전한 입력 단계에서만 입력하세요."],
 }
+
+FORM_FILL_SVC003 = {
+    "draft_payload": {
+        "car_number": "12가 3456",
+        "owner_name": "홍길동",
+        "new_address_sido": "서울특별시",
+        "new_address_sgg": "강남구",
+        "new_address_detail": None,
+        "resident_number": None,
+    },
+    "missing_fields": [
+        {"field": "new_address_detail", "question": "차량 등록 상세 주소를 입력해 주세요.", "options": []},
+        {"field": "resident_number", "question": "주민등록번호를 입력해 주세요.", "options": []},
+    ],
+    "warnings": ["제출 전 반드시 내용을 확인하세요.", "민감정보는 안전한 입력 단계에서만 입력하세요."],
+}
+
+FORM_FILL_BY_SERVICE = {
+    "SVC001": FORM_FILL,
+    "SVC003": FORM_FILL_SVC003,
+}

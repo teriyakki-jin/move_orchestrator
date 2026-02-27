@@ -153,10 +153,12 @@ class Orchestrator:
         # ── 8. Form-Fill (초안 요청 감지) ───────────────────────────
         form_result = None
         draft_result = None
-        if self._wants_draft(user_message):
-            schema = dispatch("get_form_schema", service_id="SVC001")
-            form_result = mock_data.FORM_FILL if _mock else _form_fill.run(
-                service_id="SVC001",
+        draft_service_id = self._detect_draft_service(user_message, session.move_profile)
+        if draft_service_id:
+            schema = dispatch("get_form_schema", service_id=draft_service_id)
+            mock_form = mock_data.FORM_FILL_BY_SERVICE.get(draft_service_id, mock_data.FORM_FILL)
+            form_result = mock_form if _mock else _form_fill.run(
+                service_id=draft_service_id,
                 move_profile=session.move_profile,
                 form_schema=schema,
             )
@@ -164,13 +166,14 @@ class Orchestrator:
                 draft_payload = form_result.get("draft_payload", {})
                 draft_result = dispatch(
                     "create_application_draft",
-                    service_id="SVC001",
+                    service_id=draft_service_id,
                     draft_payload=draft_payload,
                 )
                 hitl_required = True
+                service_name = schema.get("service_name", draft_service_id) if schema else draft_service_id
                 audit_events.append(AuditEvent(
                     event_type="hitl_gate",
-                    summary=f"전입신고 초안 생성 완료 (draft_id: {draft_result.get('draft_id')})",
+                    summary=f"{service_name} 초안 생성 완료 (draft_id: {draft_result.get('draft_id')})",
                     tool_name="create_application_draft",
                 ))
 
@@ -406,9 +409,27 @@ class Orchestrator:
 
         return questions
 
-    def _wants_draft(self, message: str) -> bool:
-        keywords = ["초안", "신청서", "전입신고", "만들어", "작성", "신청"]
-        return any(k in message for k in keywords)
+    def _detect_draft_service(self, message: str, profile) -> str | None:
+        """메시지와 프로필에서 초안 생성 대상 서비스 ID를 감지합니다."""
+        draft_keywords = ["초안", "신청서", "만들어", "작성", "신청"]
+        car_keywords = ["차량", "자동차", "차 주소", "차량 주소", "차량 변경", "차량 신청"]
+
+        has_draft_intent = any(k in message for k in draft_keywords)
+        # "전입신고" 단독은 SVC001 명시적 요청
+        is_svc001_explicit = "전입신고" in message
+
+        if not has_draft_intent and not is_svc001_explicit:
+            return None
+
+        # 차량 관련 키워드가 있으면 SVC003 우선
+        if any(k in message for k in car_keywords):
+            return "SVC003"
+
+        # 차량 프로필이 있고 "차" 단어가 포함되면 SVC003
+        if getattr(getattr(profile, "vehicles", None), "car", None) == "yes" and "차" in message:
+            return "SVC003"
+
+        return "SVC001"
 
     def _build_interview_message(self, questions: list, profile: MoveProfile) -> str:
         lines = ["이사 관련 민원을 도와드릴게요!\n"]
@@ -476,7 +497,9 @@ class Orchestrator:
 
         # 초안 결과
         if draft_result:
-            lines.append("### 📝 전입신고 초안")
+            svc_id = draft_result.get("service_id", "SVC001")
+            svc_label = {"SVC001": "전입신고", "SVC003": "차량 주소변경"}.get(svc_id, svc_id)
+            lines.append(f"### 📝 {svc_label} 초안")
             lines.append(f"**초안 ID**: `{draft_result['draft_id']}`\n")
             lines.append("```")
             for k, v in draft_result.get("preview", {}).items():
@@ -494,12 +517,18 @@ class Orchestrator:
 
     def _build_actions(self, session: SessionData, draft_result) -> list[SuggestedAction]:
         actions = []
-        if not self._wants_draft(""):
+        if not draft_result:
             actions.append(SuggestedAction(
                 type="create_draft",
                 label="전입신고 초안 만들기",
                 payload={"service_id": "SVC001"},
             ))
+            if session.move_profile.vehicles.car == "yes":
+                actions.append(SuggestedAction(
+                    type="create_draft",
+                    label="차량 주소변경 초안 만들기",
+                    payload={"service_id": "SVC003"},
+                ))
         if session.service_cards:
             first = session.service_cards[0]
             url = first.main_url if hasattr(first, 'main_url') else first.get('main_url', '')
